@@ -56,7 +56,7 @@ elif options == 'Perbandingan Polutan dengan Temperatur':
 elif options == 'Analisis Korelasi':
     st.subheader('Matrix Korelasi Polutan')
 
-    matrix_korelasi = data[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].corr()
+    matrix_korelasi = data[['PM2.5', 'PM10']].corr()
     plt.figure(figsize=(10, 8))
     sns.heatmap(matrix_korelasi, annot=True, cmap='coolwarm', fmt='.2f')
     plt.title('Matrix Korelasi Polutan')
@@ -65,23 +65,24 @@ elif options == 'Analisis Korelasi':
 # Visualisasi Kluster Polutan
 elif options == 'Visualisasi Kluster':
     st.subheader('Klusterisasi Polutan')
+    
+    cluster = pd.read_csv('station_pol.csv')
 
-    if 'Cluster' not in data.columns:
-        X = data[['PM2.5', 'PM10']]
-        kmeans = KMeans(n_clusters=3, random_state=42)
-        clusters = kmeans.fit_predict(X)
-        data.loc[X.index, 'Cluster'] = clusters
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.scatterplot(data=cluster, x='PM2.5', y='PM10', hue='Cluster', palette=['purple', 'yellow', 'green'], s=100, ax=ax)
 
-    plt.figure(figsize=(10, 6))
-    sns.scatterplot(data=data, x='PM2.5', y='PM10', hue='Cluster', palette='viridis', s=100)
+    for i in range(cluster.shape[0]):
+        ax.annotate(cluster['station'][i],
+                (cluster['PM2.5'][i], cluster['PM10'][i]),
+                textcoords="offset points",
+                xytext=(5, -5),
+                ha='left', fontsize=10, color='black', alpha=0.9,
+                arrowprops=dict(arrowstyle='-', color='gray', lw=0.5))
 
-    for i in range(data.shape[0]):
-        plt.annotate(data['station'][i],
-                 (data['PM2.5'][i], data['PM10'][i]),
-                 textcoords="offset points",
-                 xytext=(5,-5),
-                 ha='left', fontsize=9, alpha=0.7,
-                 arrowprops=dict(arrowstyle='-', color='gray', lw=0.5))
-
-    plt.title('Klusterisasi Polutan (PM2.5 dan PM10)')
-    st.pyplot(plt)
+    ax.set_title('Cluster Stasiun Monitoring Udara Berdasarkan PM2.5 dan PM10')
+    ax.set_xlabel('PM2.5 (µg/m³)')
+    ax.set_ylabel('PM10 (µg/m³)')
+    handles, labels = ax.get_legend_handles_labels()
+    new_labels = ['Tinggi', 'Sedang', 'Rendah']
+    ax.legend(handles, new_labels, title='Tingkat Pencemaran', loc='upper left')
+    st.pyplot(fig)
